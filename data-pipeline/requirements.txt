@@ -1,0 +1,8 @@
+playwright==1.42.0
+cloudinary==1.39.0
+openai==1.14.0
+psycopg2-binary==2.9.9
+pgvector==0.2.5
+python-dotenv==1.0.1
+
+#(注：安装完成后，请记得运行 playwright install chromium 下载浏览器内核)

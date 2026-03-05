@@ -1,0 +1,63 @@
+# =========================
+# 1. Environment Variables & Secrets (Most Important!)
+# =========================
+.env
+.env.local
+.env.*.local
+*.pem
+
+
+# =========================
+# 2. Python / Scrapers
+# =========================
+# Virtual Environments
+data-pipeline/venv/
+data-pipeline/.venv/
+env/
+venv/
+ENV/
+
+# Cache and Compiled Files
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# =========================
+# 3. Next.js / Node.js
+# =========================
+# Dependencies
+web-app/node_modules/
+node_modules/
+
+# Next.js Build Output
+web-app/.next/
+web-app/out/
+web-app/build/
+.next/
+
+# npm/yarn/pnpm Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# 4. OS & Editor Files
+# =========================
+# Mac
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# VS Code / Cursor Config (Optional, usually not committed)
+.vscode/
+.idea/
+
+# =========================
+# 5. Docker Data (Just in case)
+# =========================
+# Prevent pushing GBs of DB data if postgres is mounted locally
+postgres_data/
+*.sql
