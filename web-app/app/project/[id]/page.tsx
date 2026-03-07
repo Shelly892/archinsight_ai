@@ -26,12 +26,14 @@ export default async function ProjectPage({
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto min-h-screen">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+    <div className="p-6 max-w-[1600px] mx-auto w-full h-[calc(100vh-73px)]">
+      <div className="grid grid-cols-1 lg:grid-cols-10 gap-8 h-full">
         {/* Left Column: Project Details */}
-        <ProjectDetail project={project} />
+        <div className="lg:col-span-7 h-full overflow-hidden">
+          <ProjectDetail project={project} />
+        </div>
         {/* Right Column: AI Chat */}
-        <div className="h-[calc(100vh-3rem)] sticky top-6">
+        <div className="lg:col-span-3 h-full overflow-hidden">
           <AIChat projectId={id} />
         </div>
       </div>

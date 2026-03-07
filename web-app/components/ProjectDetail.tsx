@@ -3,12 +3,12 @@ import Link from "next/link";
 
 export default function ProjectDetail({ project }: { project: any }) {
   return (
-    <div className="space-y-6 overflow-y-auto pr-4 custom-scrollbar">
+    <div className="space-y-6 overflow-y-auto pr-4 custom-scrollbar h-full">
       <div>
         <Link
           href="/project"
           className="inline-flex items-center ml-2 text-sm font-medium text-gray-500 hover:text-black transition-colors mb-4 group"
-        > 
+        >
           <svg
             className="w-3 h-3 mr-1 group-hover:-translate-x-1 transition-transform"
             fill="none"

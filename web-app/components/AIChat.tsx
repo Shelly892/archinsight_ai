@@ -2,11 +2,16 @@
 
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type AgentType = "project" | "search" | "case-study";
 
-export function AIChat({ projectId }: { projectId?: string }) {
+interface AIChatProps {
+  projectId?: string;
+  onProjectsUpdate?: (projects: any[]) => void;
+}
+
+export function AIChat({ projectId, onProjectsUpdate }: AIChatProps) {
   const availableAgents: AgentType[] = projectId
     ? ["project", "case-study"]
     : ["search"];
@@ -21,6 +26,30 @@ export function AIChat({ projectId }: { projectId?: string }) {
       api: `/api/chat/${currentAgent}`,
     }),
   });
+
+  // Automatically update the main project list if a search tool returned results
+  useEffect(() => {
+    if (!onProjectsUpdate) return;
+
+    // Look for tool invocations via the 'parts' array in the latest messages (Vercel AI SDK v6 standard)
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage?.parts) {
+      const toolPart = lastMessage.parts.find(
+        (p: any) =>
+          p.type === "tool-invocation" &&
+          (p as any).toolInvocation?.toolName === "search_projects" &&
+          "result" in ((p as any).toolInvocation || {})
+      );
+
+      if (
+        toolPart &&
+        toolPart.type === "tool-invocation" &&
+        (toolPart as any).toolInvocation?.result
+      ) {
+        onProjectsUpdate((toolPart as any).toolInvocation.result as any[]);
+      }
+    }
+  }, [messages, onProjectsUpdate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
