@@ -1,86 +1,39 @@
-"use client";
+import { AIChat } from "@/components/AIChat";
+import { db } from "@/app/lib/db";
+import { notFound } from "next/navigation";
+import ProjectDetail from "@/components/ProjectDetail";
 
-import { useChat } from "@ai-sdk/react";
-import { useEffect, useState, use } from "react";
-import Image from "next/image";
+// Fetch data server-side
+async function getProject(id: string) {
+  const result = await db.query(
+    "SELECT id, architect, title, year, location, area, gallery, description, embedding FROM projects WHERE id=$1",
+    [id]
+  );
+  if (result.rows.length === 0) return null;
+  return result.rows[0];
+}
 
-export default function ProjectPage({
+export default async function ProjectPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const [project, setProject] = useState<any>(null);
-  const { id } = use(params); //读取 Promise 的值. params是一个promise对象. 等同于await params. 但client component 不能写 await 在组件顶层，所以 React 提供：
-  const [input, setInput] = useState("");
+  const { id } = await params;
+  const project = await getProject(id);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    sendMessage({ text: input }, { body: { projectId: id } });
-    setInput("");
-  };
-
-  useEffect(() => {
-    fetch(`/api/projects/${id}`)
-      .then((res) => res.json())
-      .then(setProject);
-  }, [id]);
-
-  const { messages, sendMessage } = useChat({
-    api: "/api/chat",
-    body: {
-      projectId: id,
-    },
-  });
-  //调用POST /api/chat 发送这样一个数据结构
-  // {
-  //   "messages": [
-  //     { "role": "user", "content": "hello" }
-  //   ],
-  //   "projectId": "123"
-  // }
-
-  if (!project) return <div>Loading...</div>;
+  if (!project) {
+    notFound();
+  }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold">{project.title}</h1>
-
-      <p className="mt-2">
-        {project.architect} — {project.year}
-      </p>
-
-      <p className="mt-4">{project.description}</p>
-      <Image
-        src={project.gallery[0]}
-        alt="Project Image"
-        width={500}
-        height={500}
-      />
-
-      <div className="mt-10">
-        <h2 className="text-xl font-bold mb-4">Ask AI about this project</h2>
-
-        <div className="space-y-4 mb-4">
-          {messages.map((m) => (
-            <div key={m.id}>
-              <strong>{m.role}</strong>:{" "}
-              {m.parts.map((p, i) =>
-                p.type === "text" ? <span key={i}>{p.text}</span> : null
-              )}
-            </div>
-          ))}
+    <div className="p-6 max-w-7xl mx-auto min-h-screen">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+        {/* Left Column: Project Details */}
+        <ProjectDetail project={project} />
+        {/* Right Column: AI Chat */}
+        <div className="h-[calc(100vh-3rem)] sticky top-6">
+          <AIChat projectId={id} />
         </div>
-
-        <form onSubmit={handleSubmit} className="flex gap-2">
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            className="border p-2 flex-1"
-            placeholder="Ask about the design..."
-          />
-
-          <button className="bg-black text-white px-4">Send</button>
-        </form>
       </div>
     </div>
   );
