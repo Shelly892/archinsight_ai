@@ -1,6 +1,6 @@
 import { db } from "@/app/lib/db";
 
-export async function findSimilarProjects(embedding: number[]) {
+export async function searchProjects(embedding: number[]) {
   const result = await db.query(
     `
     SELECT *,

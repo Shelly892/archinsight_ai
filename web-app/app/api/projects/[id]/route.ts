@@ -5,7 +5,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const result = await db.query("SELECT id, architect, title, year, location, description FROM projects WHERE id=$1", [id]);
+  const result = await db.query("SELECT id, architect, title, year, location, area, gallery, description,embedding FROM projects WHERE id=$1", [id]);
 
   return Response.json(result.rows[0]);
 }

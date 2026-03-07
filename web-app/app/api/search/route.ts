@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     id, title, architect, year, location,description, embedding <-> $1 AS distance
     FROM projects
     ORDER BY distance ASC
-    LIMIT 5
+    LIMIT 3
     `,
     [JSON.stringify(embedding)]
   );

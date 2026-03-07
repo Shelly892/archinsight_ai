@@ -1,4 +1,4 @@
-import { findSimilarProjects } from "./similarProjects";
+import { findSimilarProjects } from "./rag/retrieve";
 import { db } from "./db";
 
 export async function buildProjectContext(projectId: string) {

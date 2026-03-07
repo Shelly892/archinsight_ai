@@ -2,6 +2,7 @@
 
 import { useChat } from "@ai-sdk/react";
 import { useEffect, useState, use } from "react";
+import Image from "next/image";
 
 export default function ProjectPage({
   params,
@@ -49,6 +50,12 @@ export default function ProjectPage({
       </p>
 
       <p className="mt-4">{project.description}</p>
+      <Image
+        src={project.gallery[0]}
+        alt="Project Image"
+        width={500}
+        height={500}
+      />
 
       <div className="mt-10">
         <h2 className="text-xl font-bold mb-4">Ask AI about this project</h2>
