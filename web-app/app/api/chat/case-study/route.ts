@@ -1,9 +1,8 @@
 import { streamText, convertToModelMessages } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 
-const openai = createOpenAI({
+const openrouter = createOpenRouter({
   apiKey: process.env.OPENAI_API_KEY,
-  baseURL: process.env.OPENAI_API_BASE,
 });
 
 export async function POST(req: Request) {
@@ -11,7 +10,7 @@ export async function POST(req: Request) {
   const { messages, projectId } = payload;
 
   const result = await streamText({
-    model: openai.chat("openai/gpt-4o"),
+    model: openrouter("openai/gpt-4o"),
     messages: await convertToModelMessages(messages),
     system: `
 You are an expert architecture scholar acting as the "Case Study Agent".

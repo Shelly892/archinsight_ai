@@ -5,12 +5,20 @@ import ProjectDetail from "@/components/ProjectDetail";
 
 // Fetch data server-side
 async function getProject(id: string) {
-  const result = await db.query(
-    "SELECT id, architect, title, year, location, area, gallery, description, embedding FROM projects WHERE id=$1",
-    [id]
-  );
-  if (result.rows.length === 0) return null;
-  return result.rows[0];
+  if (!id || id === "undefined" || isNaN(Number(id))) {
+    return null;
+  }
+  try{
+    const result = await db.query(
+      "SELECT id, architect, title, year, location, area, gallery, description, embedding FROM projects WHERE id=$1",
+      [id]
+    );
+    if (result.rows.length === 0) return null;
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error fetching project:", error);
+    return null;
+  }
 }
 
 export default async function ProjectPage({

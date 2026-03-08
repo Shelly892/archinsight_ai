@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   }
 
   const result = await streamText({
-    model: openai.chat("openai/gpt-4o"), //注意加.chat, 因为openRouter的api是chat
+    model: openai.chat("anthropic/claude-3.5-sonnet"), //注意加.chat, 因为openRouter的api是chat
     messages: await convertToModelMessages(messages), //promise转成数组messages[]， UI messages转成ModelMessages
     system: `
 You are an expert architecture assistant.

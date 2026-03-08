@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export default function ProjectCard({ project }: { project: any }) {
   return (
@@ -41,7 +42,7 @@ export default function ProjectCard({ project }: { project: any }) {
         </div>
 
         <div className="mt-auto pt-2 border-t border-gray-100">
-          <a
+          <Link
             href={`/project/${project.id}`}
             className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center group"
           >
@@ -49,7 +50,7 @@ export default function ProjectCard({ project }: { project: any }) {
             <span className="ml-1 group-hover:translate-x-1 transition-transform">
               →
             </span>
-          </a>
+          </Link>
         </div>
       </div>
     </div>

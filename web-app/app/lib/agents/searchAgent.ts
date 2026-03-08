@@ -1,6 +1,11 @@
-import { streamText, tool } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { streamText, tool, stepCountIs } from "ai";
+import { createOpenAI } from "@ai-sdk/openai";
 import { searchProjects } from "../rag/retrieve";
+
+const openai = createOpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  baseURL: process.env.OPENAI_API_BASE,
+});
 import { generateEmbedding } from "../embeddings";
 import { z } from "zod";
 
@@ -10,7 +15,10 @@ export async function searchAgent(messages: any) {
   const queryText = lastUserMessage?.content || messages[0].content;
 
   return streamText({
-    model: openai.chat("openai/gpt-4o"),
+    // @ts-ignore
+    // model: openai("openai/gpt-4o", { structuredOutputs: false }),
+    model: openai.chat("anthropic/claude-3.5-sonnet"),
+    stopWhen: stepCountIs(5),
 
     system: `
     You are an expert architecture search assistant. 
@@ -36,6 +44,11 @@ export async function searchAgent(messages: any) {
           // Use the actual user's prompt (queryText) instead of the AI's generated query for the best embedding match
           const embedding = await generateEmbedding(queryText);
           const projects = await searchProjects(embedding);
+          console.log(
+            "🎯 成功执行数据库检索！找到项目:",
+            projects.length,
+            "个"
+          );
           return projects; // Passed to the client as toolInvocation.result
         },
       }),

@@ -5,11 +5,23 @@ import { DefaultChatTransport } from "ai";
 import { useState, useEffect } from "react";
 
 type AgentType = "project" | "search" | "case-study";
+interface Project {
+  id: string;
+  title: string;
+  architect: string;
+  year: number;
+  location?: string;
+  area?: string;
+  gallery?: string[];
+  description: string;
+  embedding: number[];
+}
 
 interface AIChatProps {
   projectId?: string;
-  onProjectsUpdate?: (projects: any[]) => void;
+  onProjectsUpdate?: (projects: Project[]) => void; //callback props pattern
 }
+//通常以 on 开头，代表这是一个事件监听器。数据更新回调
 
 export function AIChat({ projectId, onProjectsUpdate }: AIChatProps) {
   const availableAgents: AgentType[] = projectId
@@ -50,10 +62,6 @@ export function AIChat({ projectId, onProjectsUpdate }: AIChatProps) {
       }
     }
   }, [messages, onProjectsUpdate]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInput(e.target.value);
-  };
 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -147,18 +155,126 @@ export function AIChat({ projectId, onProjectsUpdate }: AIChatProps) {
           messages.map((m) => (
             <div
               key={m.id}
-              className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+              className={`flex ${
+                m.role === "user" ? "justify-end" : "justify-start"
+              }`}
             >
               <div
-                className={`max-w-[80%] rounded-lg p-3 ${m.role === "user" ? "bg-black text-white" : "bg-gray-100 text-gray-800"}`}
+                className={`max-w-[80%] rounded-lg p-3 ${
+                  m.role === "user"
+                    ? "bg-black text-white"
+                    : "bg-gray-100 text-gray-800"
+                }`}
               >
-                {m.parts.map((p, i) =>
-                  p.type === "text" ? (
-                    <span key={i} className="whitespace-pre-wrap">
-                      {p.text}
-                    </span>
-                  ) : null
-                )}
+                {m.parts.map((p, i) => {
+                  // 1. 渲染普通文本
+                  if (p.type === "text") {
+                    return (
+                      <span key={i} className="whitespace-pre-wrap">
+                        {p.text}
+                      </span>
+                    );
+                  }
+
+                  // 2. 渲染工具调用 (Tool Invocation)
+                  if (p.type === "tool-invocation") {
+                    const invocation = (p as any).toolInvocation;
+
+                    // 2a. 工具状态：已返回结果
+                    if (
+                      invocation.toolName === "search_projects" &&
+                      invocation.state === "result"
+                    ) {
+                      const projects = invocation.result;
+
+                      // 如果没有找到项目
+                      if (!projects || projects.length === 0) {
+                        return (
+                          <div
+                            key={i}
+                            className="text-gray-500 text-sm mt-2 italic"
+                          >
+                            未找到相关建筑项目。
+                          </div>
+                        );
+                      }
+
+                      // 如果找到了项目，渲染迷你卡片
+                      return (
+                        <div
+                          key={i}
+                          className="mt-3 p-3 bg-white border border-gray-200 rounded-md shadow-sm"
+                        >
+                          <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">
+                            🔍 数据库检索结果 ({projects.length})
+                          </p>
+                          <div className="space-y-2">
+                            {projects
+                              .slice(0, 3)
+                              .map((proj: any, idx: number) => (
+                                <div
+                                  key={idx}
+                                  className="flex flex-col text-sm border-b last:border-0 pb-2 last:pb-0 border-gray-100"
+                                >
+                                  <span className="font-semibold text-black">
+                                    {proj.title}
+                                  </span>
+                                  <span className="text-gray-500 text-xs">
+                                    {proj.architect}{" "}
+                                    {proj.location ? `· ${proj.location}` : ""}
+                                  </span>
+                                </div>
+                              ))}
+                            {projects.length > 3 && (
+                              <p className="text-xs text-blue-500 cursor-pointer pt-1">
+                                + 查看其它 {projects.length - 3} 个项目
+                                (见外部列表)
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // 2b. 工具状态：正在调用中 (Loading 动画)
+                    else if (
+                      invocation.toolName === "search_projects" &&
+                      invocation.state === "call"
+                    ) {
+                      return (
+                        <div
+                          key={i}
+                          className="text-gray-400 text-sm mt-2 animate-pulse flex items-center gap-2"
+                        >
+                          <svg
+                            className="animate-spin h-4 w-4 text-gray-400"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                          正在向量数据库中检索图纸...
+                        </div>
+                      );
+                    }
+                  }
+
+                  // 如果都不是，则不渲染任何东西
+                  return null;
+                })}
               </div>
             </div>
           ))
@@ -169,7 +285,7 @@ export function AIChat({ projectId, onProjectsUpdate }: AIChatProps) {
         <form onSubmit={handleFormSubmit} className="flex gap-2">
           <input
             value={input}
-            onChange={handleInputChange}
+            onChange={(e) => setInput(e.target.value)}
             className="border border-gray-300 rounded-lg p-3 flex-1 focus:outline-none focus:ring-2 focus:ring-black"
             placeholder="Ask a question or type @..."
           />
