@@ -255,15 +255,12 @@ export function AIChat({ projectId, onProjectsUpdate }: AIChatProps) {
                     );
                   }
 
-                  // 2. 渲染工具卡片 (宽松判断)
-                  const isSearchTool =
-                    p.type === "tool-search_projects" ||
-                    p.toolName === "search_projects";
+                  // 2. 渲染工具卡片
+                  const isSearchTool = p.type === "tool-search_projects";
 
                   if (isSearchTool) {
-                    // 兼容各种奇葩的 Vercel 字段命名
-                    const projects = p.result || p.output;
-                    const state = p.state || (projects ? "result" : "call");
+                    const projects = p.output;
+                    const state = p.state;
 
                     // 状态 A：拿到数据了
                     if (projects) {
@@ -273,7 +270,7 @@ export function AIChat({ projectId, onProjectsUpdate }: AIChatProps) {
                             key={`empty-${i}`}
                             className="text-gray-500 text-sm mt-2 italic"
                           >
-                            未找到相关建筑项目。
+                            No projects found.
                           </div>
                         );
                       }
@@ -283,7 +280,7 @@ export function AIChat({ projectId, onProjectsUpdate }: AIChatProps) {
                           className="mt-2 mb-3 p-3 bg-white border border-gray-200 rounded-md shadow-sm"
                         >
                           <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">
-                            🔍 数据库检索结果 ({projects.length})
+                            🔍 Database search results ({projects.length})
                           </p>
                           <div className="space-y-2">
                             {projects
@@ -336,7 +333,7 @@ export function AIChat({ projectId, onProjectsUpdate }: AIChatProps) {
                               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                             ></path>
                           </svg>
-                          正在向量数据库中检索图纸...
+                          Searching in vector database...
                         </div>
                       );
                     }

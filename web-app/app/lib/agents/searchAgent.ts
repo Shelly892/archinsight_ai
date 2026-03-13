@@ -1,13 +1,8 @@
-import { stepCountIs, streamText, tool } from "ai"; // 删除了 stepCountIs
-import { createOpenAI } from "@ai-sdk/openai";
+import { stepCountIs, streamText, tool } from "ai";
+import { openai } from "../openai";
 import { searchProjects } from "../rag/retrieve";
 import { generateEmbedding } from "../rag/embeddings";
 import { z } from "zod";
-
-const openai = createOpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  baseURL: process.env.OPENAI_API_BASE,
-});
 
 export async function searchAgent(messages: any) {
   return streamText({
@@ -31,26 +26,25 @@ export async function searchAgent(messages: any) {
 
         // @ts-ignore
         execute: async ({ query }: { query: string }) => {
-          // 🛡️ 给整个执行过程穿上防弹衣！
           try {
-            console.log(`\n[Tool] 1. 开始处理 AI 提取的搜索词: "${query}"`);
+            console.log(`\n[Tool] 1. start to process query: "${query}"`);
 
             const embedding = await generateEmbedding(query);
-            console.log("[Tool] 2. 向量生成成功！维度长度:", embedding.length);
+            console.log(
+              "[Tool] 2. embedding generated, length:",
+              embedding.length
+            );
 
             const projects = await searchProjects(embedding);
             console.log(
-              "[Tool] 3. 🎯 成功执行数据库检索！找到项目:",
-              projects.length,
-              "个"
+              "[Tool] 3. database retrieval success, found projects:",
+              projects.length
             );
 
             return projects;
           } catch (error) {
-            // 🚨 核心抓瞎点！如果有错误，立刻在终端里大声喊出来！
-            console.error("\n❌ [Tool] 致命错误！执行检索时崩溃了:", error);
+            console.error("\n [Tool] error! execution failed:", error);
 
-            // 优雅地告诉 AI 发生了什么事，防止 AI 懵逼
             return {
               error: "Database or embedding failure.",
               details: String(error),

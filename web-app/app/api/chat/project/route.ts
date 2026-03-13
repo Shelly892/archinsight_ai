@@ -1,10 +1,6 @@
 import { streamText, convertToModelMessages } from "ai";
-import { createOpenRouter } from "@openrouter/ai-sdk-provider";
-import { buildProjectContext } from "@/app/lib/rag/retrieve";
-
-const openrouter = createOpenRouter({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { openai } from "@/app/lib/openai";
+import { buildProjectContext } from "@/app/lib/rag/context";
 
 export async function POST(req: Request) {
   const payload = await req.json();
@@ -16,7 +12,7 @@ export async function POST(req: Request) {
   }
 
   const result = await streamText({
-    model: openrouter("openai/gpt-4o"),
+    model: openai("openai/gpt-4o"),
     messages: await convertToModelMessages(messages),
     system: `
 You are an expert architecture assistant acting as the "Project Agent".
