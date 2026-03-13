@@ -18,7 +18,8 @@ export async function searchProjects(embedding: number[]) {
     ORDER BY distance
     LIMIT 3
     `,
-    [embedding]
+    // 🚨 【核心修复】：加上 JSON.stringify，给它套上中括号！
+    [JSON.stringify(embedding)]
   );
 
   // 🕵️ 加上这行探照灯代码，在终端里看清真面目！
