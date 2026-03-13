@@ -19,16 +19,16 @@ export default function RootLayout({
 
           <div className="flex gap-6 text-sm font-medium text-gray-600 ml-4">
             <Link
+              href="/all-projects"
+              className="hover:text-black transition-colors"
+            >
+              All Projects
+            </Link>
+            <Link
               href="/project"
               className="hover:text-black transition-colors"
             >
-              Projects
-            </Link>
-            <Link
-              href="/favorite"
-              className="hover:text-black transition-colors"
-            >
-              Favorites
+              AI Search
             </Link>
           </div>
         </nav>

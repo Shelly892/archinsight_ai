@@ -1,7 +1,7 @@
 import { stepCountIs, streamText, tool } from "ai"; // 删除了 stepCountIs
 import { createOpenAI } from "@ai-sdk/openai";
 import { searchProjects } from "../rag/retrieve";
-import { generateEmbedding } from "../embeddings";
+import { generateEmbedding } from "../rag/embeddings";
 import { z } from "zod";
 
 const openai = createOpenAI({
@@ -10,7 +10,6 @@ const openai = createOpenAI({
 });
 
 export async function searchAgent(messages: any) {
-
   return streamText({
     model: openai.chat("anthropic/claude-3.5-sonnet"),
     // model: openai.chat("openai/gpt-4o"),

@@ -1,4 +1,4 @@
-import { db } from "@/app/lib/db";
+import { db } from "../db";
 
 export async function searchProjects(embedding: number[]) {
   const result = await db.query(
@@ -16,7 +16,7 @@ export async function searchProjects(embedding: number[]) {
       embedding <-> $1 AS distance
     FROM projects
     ORDER BY distance
-    LIMIT 3
+    LIMIT 5
     `,
     // 🚨 【核心修复】：加上 JSON.stringify，给它套上中括号！
     [JSON.stringify(embedding)]

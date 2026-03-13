@@ -1,7 +1,7 @@
 /*  此文件没有用上，只保留作为概念的理解，embedding的生成和存储*/
 
 // import { db } from "../lib/db";
-// import { generateEmbedding } from "../lib/embeddings";
+// import { generateEmbedding } from "../lib/rag/embeddings";
 
 // async function embedProjects() {
 //   const result = await db.query(

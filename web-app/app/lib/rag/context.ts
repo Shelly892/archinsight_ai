@@ -1,5 +1,5 @@
-import { searchProjects } from "./rag/retrieve";
-import { db } from "./db";
+import { searchProjects } from "./retrieve";
+import { db } from "../db";
 
 export async function buildProjectContext(projectId: string) {
   const project = await db.query("SELECT * FROM projects WHERE id=$1", [

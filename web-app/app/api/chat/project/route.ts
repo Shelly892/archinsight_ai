@@ -1,6 +1,6 @@
 import { streamText, convertToModelMessages } from "ai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
-import { buildProjectContext } from "@/app/lib/rag";
+import { buildProjectContext } from "@/app/lib/rag/retrieve";
 
 const openrouter = createOpenRouter({
   apiKey: process.env.OPENAI_API_KEY,

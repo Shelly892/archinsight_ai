@@ -28,7 +28,7 @@ export default function Home() {
         </p>
 
         <Link
-          href="/project"
+          href="/all-projects"
           className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white bg-black rounded-full overflow-hidden transition-transform hover:scale-105 shadow-[0_0_40px_-10px_rgba(0,0,0,0.5)]"
         >
           <span className="absolute inset-0 w-full h-full -mt-1 rounded-lg opacity-30 bg-gradient-to-b from-transparent via-transparent to-black"></span>
