@@ -71,14 +71,14 @@ export function AIChat({ projectId, onProjectsUpdate }: AIChatProps) {
 
   // Sync back to localstorage whenever messages update
   useEffect(() => {
-    // 🚨 Only save if the currently loaded storage key matches the current storageKey prop
+    //  Only save if the currently loaded storage key matches the current storageKey prop
     // This prevents writing Project A's messages into Project B's cache when navigating
     if (isMounted && loadedStorageKey === storageKey) {
       localStorage.setItem(storageKey, JSON.stringify(messages));
     }
   }, [messages, isMounted, storageKey, loadedStorageKey]);
 
-  // 🎯 修复 1：倒序扫描，防止多步调用时被纯文本覆盖
+  // 修复 1：倒序扫描，防止多步调用时被纯文本覆盖
   useEffect(() => {
     if (!onProjectsUpdate || messages.length === 0) return;
 
@@ -147,25 +147,31 @@ export function AIChat({ projectId, onProjectsUpdate }: AIChatProps) {
         <div className="flex items-center gap-3">
           <div className="flex gap-2 text-xs">
             {availableAgents.includes("project") && (
-              <span
-                className={`px-2 py-1 rounded ${currentAgent === "project" ? "bg-blue-100 text-blue-700" : "bg-gray-200 text-gray-600"}`}
+              <button
+                type="button"
+                onClick={() => setCurrentAgent("project")}
+                className={`px-2 py-1 rounded transition-colors cursor-pointer ${currentAgent === "project" ? "bg-blue-100 text-blue-700" : "bg-gray-200 text-gray-600 hover:bg-gray-300"}`}
               >
                 @project
-              </span>
+              </button>
             )}
             {availableAgents.includes("search") && (
-              <span
-                className={`px-2 py-1 rounded ${currentAgent === "search" ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"}`}
+              <button
+                type="button"
+                onClick={() => setCurrentAgent("search")}
+                className={`px-2 py-1 rounded transition-colors cursor-pointer ${currentAgent === "search" ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600 hover:bg-gray-300"}`}
               >
                 @search
-              </span>
+              </button>
             )}
             {availableAgents.includes("case-study") && (
-              <span
-                className={`px-2 py-1 rounded ${currentAgent === "case-study" ? "bg-purple-100 text-purple-700" : "bg-gray-200 text-gray-600"}`}
+              <button
+                type="button"
+                onClick={() => setCurrentAgent("case-study")}
+                className={`px-2 py-1 rounded transition-colors cursor-pointer ${currentAgent === "case-study" ? "bg-purple-100 text-purple-700" : "bg-gray-200 text-gray-600 hover:bg-gray-300"}`}
               >
                 @case
-              </span>
+              </button>
             )}
           </div>
 
@@ -242,103 +248,163 @@ export function AIChat({ projectId, onProjectsUpdate }: AIChatProps) {
                 className={`max-w-[80%] rounded-lg p-3 ${m.role === "user" ? "bg-black text-white" : "bg-gray-100 text-gray-800"}`}
               >
                 {/* 🎯 修复 2：全兼容渲染逻辑 */}
-                {m.parts?.map((p: any, i: number) => {
-                  // 1. 渲染纯文本
-                  if (p.type === "text") {
-                    return (
-                      <div
-                        key={`text-${i}`}
-                        className="whitespace-pre-wrap mb-2"
-                      >
-                        {p.text}
-                      </div>
-                    );
-                  }
+                {m.parts?.map((part: any, i: number) => {
+                  switch (part.type) {
+                    // 1. 渲染纯文本
+                    case "text":
+                      return (
+                        <div
+                          key={`text-${i}`}
+                          className="whitespace-pre-wrap mb-2"
+                        >
+                          {part.text}
+                        </div>
+                      );
 
-                  // 2. 渲染工具卡片
-                  const isSearchTool = p.type === "tool-search_projects";
+                    // 2. 渲染 Database 项目搜索工具卡片
+                    case "tool-search_projects": {
+                      const projects = part.output;
+                      const state = part.state;
 
-                  if (isSearchTool) {
-                    const projects = p.output;
-                    const state = p.state;
-
-                    // 状态 A：拿到数据了
-                    if (projects) {
-                      if (projects.length === 0) {
+                      if (projects) {
+                        if (projects.length === 0) {
+                          return (
+                            <div
+                              key={`empty-${i}`}
+                              className="text-gray-500 text-sm mt-2 italic"
+                            >
+                              No projects found.
+                            </div>
+                          );
+                        }
                         return (
                           <div
-                            key={`empty-${i}`}
-                            className="text-gray-500 text-sm mt-2 italic"
+                            key={`card-${i}`}
+                            className="mt-2 mb-3 p-3 bg-white border border-gray-200 rounded-md shadow-sm"
                           >
-                            No projects found.
+                            <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">
+                              🔍 Database search results ({projects.length})
+                            </p>
+                            <div className="space-y-2">
+                              {projects
+                                .slice(0, 3)
+                                .map((proj: any, idx: number) => (
+                                  <div
+                                    key={idx}
+                                    className="p-2 hover:bg-gray-50 rounded cursor-pointer transition-colors border-b last:border-0 border-gray-100"
+                                    onClick={() =>
+                                      window.open(`/project/${proj.id}`, "_blank")
+                                    }
+                                  >
+                                    <div className="font-semibold text-gray-900 text-sm">
+                                      {proj.title}
+                                    </div>
+                                    <div className="text-gray-500 text-xs mt-1">
+                                      {proj.architect} • {proj.year}
+                                    </div>
+                                  </div>
+                                ))}
+                            </div>
                           </div>
                         );
                       }
-                      return (
-                        <div
-                          key={`card-${i}`}
-                          className="mt-2 mb-3 p-3 bg-white border border-gray-200 rounded-md shadow-sm"
-                        >
-                          <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">
-                            🔍 Database search results ({projects.length})
-                          </p>
-                          <div className="space-y-2">
-                            {projects
-                              .slice(0, 3)
-                              .map((proj: any, idx: number) => (
-                                <div
-                                  key={idx}
-                                  className="p-2 hover:bg-gray-50 rounded cursor-pointer transition-colors border-b last:border-0 border-gray-100"
-                                  onClick={() =>
-                                    window.open(`/project/${proj.id}`, "_blank")
-                                  }
-                                >
-                                  <div className="font-semibold text-gray-900 text-sm">
-                                    {proj.title}
-                                  </div>
-                                  <div className="text-gray-500 text-xs mt-1">
-                                    {proj.architect} • {proj.year}
-                                  </div>
-                                </div>
-                              ))}
+
+                      if (state === "call" || state === "input-streaming") {
+                        return (
+                          <div
+                            key={`load-${i}`}
+                            className="text-gray-400 text-sm mt-2 animate-pulse flex items-center gap-2"
+                          >
+                            <svg className="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Searching in vector database...
                           </div>
-                        </div>
-                      );
+                        );
+                      }
+                      return null;
                     }
 
-                    // 状态 B：加载中
-                    if (state === "call" || state === "input-streaming") {
-                      return (
-                        <div
-                          key={`load-${i}`}
-                          className="text-gray-400 text-sm mt-2 animate-pulse flex items-center gap-2"
-                        >
-                          <svg
-                            className="animate-spin h-4 w-4 text-gray-400"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
+                    // 3. 渲染 Web Search 工具卡片
+                    case "tool-web_search": {
+                      const results = part.output;
+                      const state = part.state;
+
+                      if (results) {
+                        if (results.length === 0) {
+                          return (
+                            <div
+                              key={`empty-${i}`}
+                              className="text-gray-500 text-sm mt-2 italic"
+                            >
+                              No web search results found.
+                            </div>
+                          );
+                        }
+                        return (
+                          <div
+                            key={`card-${i}`}
+                            className="mt-2 mb-3 p-3 bg-white border border-gray-200 rounded-md shadow-sm"
                           >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            ></circle>
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
-                          </svg>
-                          Searching in vector database...
-                        </div>
-                      );
+                            <p className="text-xs font-bold text-blue-500 mb-2 uppercase tracking-wider flex items-center gap-2">
+                              <span>🌐</span> Web Search Results ({results.length})
+                            </p>
+                            <div className="space-y-3">
+                              {results.slice(0, 3).map((res: any, idx: number) => (
+                                <div
+                                  key={idx}
+                                  className="border-b last:border-0 border-gray-100 pb-2 last:pb-0"
+                                >
+                                  <a
+                                    href={res.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="font-semibold text-blue-600 hover:underline text-sm line-clamp-1"
+                                  >
+                                    {res.title}
+                                  </a>
+                                  <p className="text-gray-600 text-xs mt-1 line-clamp-2">
+                                    {res.snippet}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      if (state === "call" || state === "input-streaming") {
+                        return (
+                          <div
+                            key={`load-${i}`}
+                            className="text-gray-400 text-sm mt-2 animate-pulse flex items-center gap-2"
+                          >
+                            <svg className="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Searching the web...
+                          </div>
+                        );
+                      }
+                      return null;
                     }
+
+                    default:
+                      // 为了兼容 Vercel AI SDK 中标准的 tool-invocation 格式
+                      if (part.type === "tool-invocation") {
+                        const toolName = part.toolInvocation?.toolName || part.toolName;
+                        if (toolName === "search_projects") {
+                          // TODO: 如果需要可以把上面 "tool-search_projects" 的渲染抽离成函数，在这里复用
+                          return <div key={`inv-${i}`} className="text-gray-400 text-xs italic">Tool Used: Database Search</div>;
+                        }
+                        if (toolName === "web_search") {
+                          return <div key={`inv-${i}`} className="text-gray-400 text-xs italic">Tool Used: Web Search</div>;
+                        }
+                      }
+                      return null;
                   }
-                  return null;
                 })}
               </div>
             </div>

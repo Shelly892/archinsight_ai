@@ -18,7 +18,7 @@ export async function searchProjects(embedding: number[]) {
     ORDER BY distance
     LIMIT 5
     `,
-    // 🚨 【核心修复】：加上 JSON.stringify，给它套上中括号！
+    // 🚨 加上 JSON.stringify，给它套上中括号！
     [JSON.stringify(embedding)]
   );
 

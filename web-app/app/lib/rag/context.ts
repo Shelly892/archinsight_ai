@@ -8,8 +8,6 @@ export async function buildProjectContext(projectId: string) {
 
   const p = project.rows[0];
 
-  const similar = await searchProjects(p.embedding);
-
   return `
 Project:
 ${p.title}
@@ -20,10 +18,13 @@ ${p.architect}
 Year:
 ${p.year}
 
+Location:
+${p.location}
+
+Area:
+${p.area}
+
 Description:
 ${p.description}
-
-Similar projects:
-${similar.map((s) => s.title).join(", ")}
 `;
 }
