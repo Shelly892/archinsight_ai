@@ -62,6 +62,17 @@ export default function ProjectDetail({ project }: { project: any }) {
               {project.area || "N/A"}
             </span>
           </div>
+          <div className="w-px bg-gray-200"></div>
+          <div className="flex flex-col">
+            <span className="text-gray-400 uppercase text-xs font-bold tracking-wider">
+              Original Link
+            </span>
+            <span className="font-medium text-blue-600 hover:underline break-all">
+              <a href={project.url} target="_blank" rel="noopener noreferrer">
+                {project.url}
+              </a>
+            </span>
+          </div>
         </div>
       </div>
 
@@ -94,6 +105,7 @@ export default function ProjectDetail({ project }: { project: any }) {
                 alt={`${project.title} - Image ${idx + 1}`}
                 width={800}
                 height={600}
+                quality={100}
                 className="w-full h-auto object-cover hover:scale-105 transition-transform duration-700"
                 priority={idx === 0}
               />

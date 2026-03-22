@@ -10,7 +10,7 @@ async function getProject(id: string) {
   }
   try{
     const result = await db.query(
-      "SELECT id, architect, title, year, location, area, gallery, description, embedding FROM projects WHERE id=$1",
+      "SELECT id, architect, title, year, location, area, gallery, description,url, embedding FROM projects WHERE id=$1",
       [id]
     );
     if (result.rows.length === 0) return null;

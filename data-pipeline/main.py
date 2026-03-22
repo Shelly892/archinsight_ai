@@ -53,8 +53,12 @@ def main():
 
                 print(f"\n🚀 [进度: {total_scraped + 1}/{TARGET_TOTAL}] 开始抓取: {url}")
                 try:
+                    # 每篇文章单独开新 context，抓完立即关掉
+                    ctx = browser.new_context()
+                    project_page = ctx.new_page()
                     # 第一步：提取 (Extract)
-                    raw_data = scraper.scrape_project_data(page, url)
+                    raw_data = scraper.scrape_project_data(project_page, url)
+                    ctx.close()
                     
                     # 只有成功抓到标题和内容的，才往下走
                     if raw_data and raw_data['title'] != "Unknown Title":

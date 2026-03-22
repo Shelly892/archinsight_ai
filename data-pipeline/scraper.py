@@ -49,7 +49,7 @@ def get_category_project_urls(page, list_url, limit=30):
 def scrape_project_data(page, url):
     """负责从网页提取原始文本和原图链接"""
     print(f"[Scraper] 正在抓取: {url}")
-    page.goto(url, timeout=90000,wait_until="networkidle") # timeout 60s
+    page.goto(url, timeout=90000,wait_until="domcontentloaded") # timeout 60s
     
     title = page.locator('h1.afd-title-big').inner_text() if page.locator('h1.afd-title-big').count() > 0 else "Unknown Title"
     
