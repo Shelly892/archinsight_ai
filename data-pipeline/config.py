@@ -3,10 +3,10 @@ from dotenv import load_dotenv
 import boto3
 from openai import OpenAI
 
-# 加载 .env 文件
+# Load environment variables from .env file
 load_dotenv(override=True)
 
-# 初始化 Cloudflare R2 客户端
+# Initialize Cloudflare R2 client
 s3_client = boto3.client(
     's3',
     endpoint_url=f"https://{os.getenv('CLOUDFLARE_ACCOUNT_ID')}.r2.cloudflarestorage.com",
@@ -17,13 +17,13 @@ s3_client = boto3.client(
 R2_BUCKET = os.getenv('CLOUDFLARE_BUCKET_NAME')
 R2_DOMAIN = os.getenv('CLOUDFLARE_PUBLIC_DOMAIN')
 
-# 初始化 OpenAI 客户端
+# Initialize OpenAI client (pointed at OpenRouter)
 openai_client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=os.getenv("OPENAI_API_KEY"),
 )
 
-# 数据库参数
+# Database connection parameters
 DB_PARAMS = {
     "dbname": os.getenv("DB_NAME"),
     "user": os.getenv("DB_USER"),

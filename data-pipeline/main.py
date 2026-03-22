@@ -5,84 +5,80 @@ import processor
 import time
 
 def main():
-    # 1. 通知库房做好准备
+    # 1. Initialize the database
     db.init_db()
-    # 2. 设定我们的终极目标
-    TARGET_TOTAL = 30       # 目标数量：50 个项目
-    total_scraped = 0       # 计数器：目前抓成功了几个
-    current_page = 1        # 翻页器：当前在第几页
+    # 2. Set the scraping target
+    TARGET_TOTAL = 30       # Total number of projects to scrape
+    total_scraped = 0       # Counter: how many have been successfully scraped
+    current_page = 1        # Pagination tracker: which listing page we're on
 
-    # ArchDaily 所有项目列表的基础网址
+    # Base URL for all ArchDaily projects listing
     base_url = "https://www.archdaily.com/search/projects"
-    # # 2. 确定今天的目标 (只测试一个页面)
-    # target_urls = [
-    #     "https://www.archdaily.com/1039308/hotel-myeongdong-station-yong-ju-lee-architecture"
-    # ]
     
-    # 3. 启动自动化流水线
+    # 3. Launch the automated pipeline
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True) 
         page = browser.new_page()
         
         while total_scraped < TARGET_TOTAL:
-            print(f"\n====== scanning {current_page}=======")
+            print(f"\n====== Scanning listing page {current_page} =======")
 
-            if current_page==1:
-                list_url=base_url
+            if current_page == 1:
+                list_url = base_url
             else:
-                list_url=f"{base_url}?page={current_page}"
+                list_url = f"{base_url}?page={current_page}"
             
             try:
                 project_urls = scraper.get_category_project_urls(page, list_url, limit=30)
             except Exception as e:
-                print(f"❌ 获取第 {current_page} 页列表失败: {e}")
+                print(f"❌ Failed to fetch listing page {current_page}: {e}")
                 break
             
             if not project_urls:
-                print(f"⚠️ 第 {current_page} 页没有找到任何项目，可能是最后一页了。")
+                print(f"⚠️ No projects found on page {current_page}. This may be the last page.")
                 break
 
             for url in project_urls:
                 if total_scraped >= TARGET_TOTAL:
                     break
 
-                # 🛡️ 【终极拦截器：1 毫秒识别，不浪费任何资源！】
+                # Deduplication check — skip if already in the database
                 if db.check_url_exists(url):
-                    print(f"⏩ [去重跳过] 数据库中已存在: {url}")
-                    continue # 直接跳过当前网址，进行下一个循环！
+                    print(f"⏩ [Skip] Already in database: {url}")
+                    continue
 
-                print(f"\n🚀 [进度: {total_scraped + 1}/{TARGET_TOTAL}] 开始抓取: {url}")
+                print(f"\n🚀 [Progress: {total_scraped + 1}/{TARGET_TOTAL}] Scraping: {url}")
                 try:
-                    # 每篇文章单独开新 context，抓完立即关掉
+                    # Open a fresh browser context per article to avoid session-based paywalls
                     ctx = browser.new_context()
                     project_page = ctx.new_page()
-                    # 第一步：提取 (Extract)
+                    # Step 1: Extract
                     raw_data = scraper.scrape_project_data(project_page, url)
                     ctx.close()
                     
-                    # 只有成功抓到标题和内容的，才往下走
+                    # Only proceed if a valid title and content were found
                     if raw_data and raw_data['title'] != "Unknown Title":
-                        # 🏷️ 【核心】：把网址打上标签，送给下个部门存进数据库
+                        # Save the source URL alongside the project data
                         raw_data['url'] = url
-                        # 第二步：转换 (Transform)
+                        # Step 2: Transform
                         raw_data['gallery'] = processor.process_images(raw_data['raw_gallery'])
                         raw_data['embedding'] = processor.generate_embedding(raw_data)
                         
-                        # 第三步：加载 (Load)
+                        # Step 3: Load
                         db.insert_project(raw_data)
-                        total_scraped += 1  # 计数器 +1
+                        total_scraped += 1
                             
-                        # ⚠️ 爬虫礼仪：休息 3 秒
-                        print("⏳ 休息 3 秒，防止被封 IP...")
+                        # Be polite to the server — wait 3 seconds between requests
+                        print("⏳ Waiting 3 seconds before next request...")
                         time.sleep(3)
                     else:
-                        print(f"⚠️ 跳过无效项目")
+                        print(f"⚠️ Skipping invalid project")
                 except Exception as e:
-                    print(f"流水线中断报错: {e}")
+                    print(f"Pipeline error: {e}")
             current_page += 1
                 
         browser.close()
-        print("🎉 所有任务处理完成！")
+        print("🎉 All tasks completed!")
 
 if __name__ == "__main__":
     main()

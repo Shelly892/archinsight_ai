@@ -21,20 +21,20 @@ def init_db():
         );
     """)
 
-    # 2. 【无损升级魔法】：为你现有的旧表安全地追加 url 列！
+    # Safely add the url column to any existing table without data loss
     try:
         cur.execute("ALTER TABLE projects ADD COLUMN IF NOT EXISTS url VARCHAR(512);")
     except Exception:
-        pass # 如果已经有了就不管它
+        pass  # Column already exists, nothing to do
 
     conn.commit()
     cur.close()
     conn.close()
-    print("[DB] 数据库表已就绪。")
+    print("[DB] Database table is ready.")
 
 
 def check_url_exists(url):
-    """【新增功能】：前置拦截器！只需 0.01 秒即可判断是否爬过"""
+    """Pre-flight check: returns True if this URL has already been scraped."""
     conn = psycopg2.connect(**DB_PARAMS)
     cur = conn.cursor()
     try:
@@ -53,32 +53,31 @@ def insert_project(data):
     register_vector(conn)
     cur = conn.cursor()
     try:
-        # 事后兜底：既查 url 也查 title
+        # Secondary dedup check: match by URL or title to avoid duplicates
         cur.execute("SELECT id FROM projects WHERE url = %s OR title = %s;", (data['url'], data['title']))
         existing_project = cur.fetchone()
 
-        # 2. 🚦 判断逻辑
         if existing_project:
-            # 如果 existing_project 不是 None，说明查到了！
-            print(f"[DB] ⚠️ 跳过重复项目: {data['title']} (已存在于数据库中)\n")
+            # Project already exists — skip insertion
+            print(f"[DB] ⚠️ Duplicate skipped: {data['title']} (already in database)\n")
         else:
-            # 如果是 None，说明是新项目，执行真正的插入操作
+            # New project — proceed with insertion
             cur.execute(
                 """
                 INSERT INTO projects 
-                (title, architect, year, location, area, description, gallery, embedding,url)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s,%s)
+                (title, architect, year, location, area, description, gallery, embedding, url)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 (
                     data['title'], data['architect'], data['year'], 
                     data['location'], data['area'], data['description'], 
-                    data['gallery'], data['embedding'],data['url']
+                    data['gallery'], data['embedding'], data['url']
                 )
             )
             conn.commit()
-            print(f"[DB] ✅ 成功入库: {data['title']}\n")
+            print(f"[DB] ✅ Inserted: {data['title']}\n")
     except Exception as e:
-        print(f"[DB] ❌ 入库失败: {e}")
+        print(f"[DB] ❌ Insert failed: {e}")
         conn.rollback()
     finally:
         cur.close()
