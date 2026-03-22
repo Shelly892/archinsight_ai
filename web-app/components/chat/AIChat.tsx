@@ -1,33 +1,15 @@
 "use client";
-import { SpinnerIcon } from "./SpinnerIcon";
-import { LoadingIndicator } from "./LoadingIndicator";
-import { ResultCard } from "./ResultCard";
-import Link from "next/link";
-import { useChat, UIMessage } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
+
 import { useState, useEffect } from "react";
-
-type AgentType = "project" | "search" | "case-study";
-interface Project {
-  id: string;
-  title: string;
-  architect: string;
-  year: number;
-  location?: string;
-  area?: string;
-  gallery?: string[];
-  description: string;
-  embedding: number[];
-}
-
-interface AIChatProps {
-  projectId?: string;
-  onProjectsUpdate?: (projects: Project[]) => void;
-}
+import { AgentType, AIChatProps } from "./types";
+import { usePersistentChat } from "./usePersistentChat";
+import { MessagePart } from "./MessageParts";
+import { SpinnerIcon } from "./SpinnerIcon";
+import { AgentSwitcher } from "./AgentSwitcher";
 
 export function AIChat({ projectId, onProjectsUpdate }: AIChatProps) {
   const availableAgents: AgentType[] = projectId
-    ? ["project", "case-study"]
+    ? ["project", "case"]
     : ["search"];
 
   const [currentAgent, setCurrentAgent] = useState<AgentType>(
@@ -39,49 +21,13 @@ export function AIChat({ projectId, onProjectsUpdate }: AIChatProps) {
     ? `archinsight_chat_${projectId}`
     : `archinsight_chat_search`;
 
-  // Provide an initial loading state constraint to prevent hydration mismatch
-  // between server SSR (empty localstorage) and client mounting (has localstorage)
-  const [isMounted, setIsMounted] = useState(false);
-  const [loadedStorageKey, setLoadedStorageKey] = useState<string | null>(null);
+  const { messages, sendMessage, setMessages, isMounted, clearChat } =
+    usePersistentChat({
+      storageKey,
+      agentApi: `/api/chat/${currentAgent}`,
+    });
 
-  const { messages, sendMessage, setMessages } = useChat({
-    transport: new DefaultChatTransport({
-      api: `/api/chat/${currentAgent}`,
-    }),
-  });
-
-  useEffect(() => {
-    // Client-side hydration only
-    const savedChat = localStorage.getItem(storageKey);
-    if (savedChat) {
-      try {
-        const parsed = JSON.parse(savedChat);
-        if (parsed && Array.isArray(parsed) && parsed.length > 0) {
-          setMessages(parsed);
-        } else {
-          setMessages([]);
-        }
-      } catch (e) {
-        console.error("Failed to parse saved chat history", e);
-        setMessages([]);
-      }
-    } else {
-      setMessages([]);
-    }
-    setLoadedStorageKey(storageKey);
-    setIsMounted(true);
-  }, [storageKey, setMessages]);
-
-  // Sync back to localstorage whenever messages update
-  useEffect(() => {
-    //  Only save if the currently loaded storage key matches the current storageKey prop
-    // This prevents writing Project A's messages into Project B's cache when navigating
-    if (isMounted && loadedStorageKey === storageKey) {
-      localStorage.setItem(storageKey, JSON.stringify(messages));
-    }
-  }, [messages, isMounted, storageKey, loadedStorageKey]);
-
-  // 修复 1：倒序扫描，防止多步调用时被纯文本覆盖
+  // reverse scan to find the last tool-search_projects
   useEffect(() => {
     if (!onProjectsUpdate || messages.length === 0) return;
 
@@ -89,7 +35,6 @@ export function AIChat({ projectId, onProjectsUpdate }: AIChatProps) {
       const m = messages[i];
       if (!m.parts) continue;
 
-      // 只要名字里带 search_projects 就抓取
       const toolPart = m.parts.find(
         (p: any) =>
           p.type === "tool-search_projects" || p.toolName === "search_projects"
@@ -100,7 +45,7 @@ export function AIChat({ projectId, onProjectsUpdate }: AIChatProps) {
         const projects = pObj.output;
         if (projects && projects.length > 0) {
           onProjectsUpdate(projects);
-          break; // 找到了就立刻抛出，并停止扫描
+          break;
         }
       }
     }
@@ -121,8 +66,8 @@ export function AIChat({ projectId, onProjectsUpdate }: AIChatProps) {
         newAgent = "project";
       else if (trigger === "@search" && availableAgents.includes("search"))
         newAgent = "search";
-      else if (trigger === "@case" && availableAgents.includes("case-study"))
-        newAgent = "case-study";
+      else if (trigger === "@case" && availableAgents.includes("case"))
+        newAgent = "case";
 
       if (newAgent) {
         setCurrentAgent(newAgent);
@@ -141,42 +86,17 @@ export function AIChat({ projectId, onProjectsUpdate }: AIChatProps) {
 
   return (
     <div className="flex flex-col h-full bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-      {/* 头部栏保持不变 */}
       <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
         <h2 className="font-semibold text-gray-800">
           AI Architecture Assistant
         </h2>
 
         <div className="flex items-center gap-3">
-          <div className="flex gap-2 text-xs">
-            {availableAgents.includes("project") && (
-              <button
-                type="button"
-                onClick={() => setCurrentAgent("project")}
-                className={`px-2 py-1 rounded transition-colors cursor-pointer ${currentAgent === "project" ? "bg-blue-100 text-blue-700" : "bg-gray-200 text-gray-600 hover:bg-gray-300"}`}
-              >
-                @project
-              </button>
-            )}
-            {availableAgents.includes("search") && (
-              <button
-                type="button"
-                onClick={() => setCurrentAgent("search")}
-                className={`px-2 py-1 rounded transition-colors cursor-pointer ${currentAgent === "search" ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600 hover:bg-gray-300"}`}
-              >
-                @search
-              </button>
-            )}
-            {availableAgents.includes("case-study") && (
-              <button
-                type="button"
-                onClick={() => setCurrentAgent("case-study")}
-                className={`px-2 py-1 rounded transition-colors cursor-pointer ${currentAgent === "case-study" ? "bg-purple-100 text-purple-700" : "bg-gray-200 text-gray-600 hover:bg-gray-300"}`}
-              >
-                @case
-              </button>
-            )}
-          </div>
+          <AgentSwitcher
+            availableAgents={availableAgents}
+            currentAgent={currentAgent}
+            onChange={setCurrentAgent}
+          />
 
           <button
             onClick={() => {
@@ -185,8 +105,7 @@ export function AIChat({ projectId, onProjectsUpdate }: AIChatProps) {
                   "Are you sure you want to clear this chat history?"
                 )
               ) {
-                setMessages([]);
-                localStorage.removeItem(storageKey);
+                clearChat();
               }
             }}
             className="text-gray-400 hover:text-red-500 transition-colors p-1"
@@ -231,104 +150,9 @@ export function AIChat({ projectId, onProjectsUpdate }: AIChatProps) {
               <div
                 className={`max-w-[80%] rounded-lg p-3 ${m.role === "user" ? "bg-black text-white" : "bg-gray-100 text-gray-800"}`}
               >
-                {m.parts?.map((part: any, i: number) => {
-                  switch (part.type) {
-                    // render text
-                    case "text":
-                      return (
-                        <div
-                          key={`text-${i}`}
-                          className="whitespace-pre-wrap mb-2"
-                        >
-                          {part.text}
-                        </div>
-                      );
-
-                    // render Database search tool card
-                    case "tool-search_projects": {
-                      const projects = part.output;
-                      const state = part.state;
-
-                      if (projects) {
-                        return (
-                          <ResultCard
-                            key={`card-${i}`}
-                            title="🔍 Database search results"
-                            items={projects}
-                            renderItem={(proj: any, idx: number) => (
-                              <Link
-                                key={idx}
-                                href={`/project/${proj.id}`}
-                                className="block p-2 hover:bg-gray-50 rounded transition-colors border-b last:border-0 border-gray-100"
-                              >
-                                <div className="font-semibold text-gray-900 text-sm">
-                                  {proj.title}
-                                </div>
-                                <div className="text-gray-500 text-xs mt-1">
-                                  {proj.architect} • {proj.year}
-                                </div>
-                              </Link>
-                            )}
-                            emptyMessage="No projects found."
-                          />
-                        );
-                      }
-                      if (state === "call" || state === "input-streaming") {
-                        return (
-                          <LoadingIndicator
-                            key={`load-${i}`}
-                            text="Searching in vector database..."
-                          />
-                        );
-                      }
-                      return null;
-                    }
-
-                    // render Web Search tool card
-                    case "tool-web_search": {
-                      const results = part.output;
-                      const state = part.state;
-
-                      if (results) {
-                        return (
-                          <ResultCard
-                            key={`card-${i}`}
-                            title="🌐 Web Search Results"
-                            items={results}
-                            renderItem={(res: any, idx: number) => (
-                              <div
-                                key={idx}
-                                className="p-2 hover:bg-gray-50 rounded cursor-pointer transition-colors border-b last:border-0 border-gray-100"
-                                onClick={() => window.open(res.url, "_blank")}
-                              >
-                                <div className="font-semibold text-gray-900 text-sm">
-                                  {res.title}
-                                </div>
-                                <div className="text-gray-500 text-xs mt-1 line-clamp-2">
-                                  {res.snippet}
-                                </div>
-                              </div>
-                            )}
-                            emptyMessage="No web search results found."
-                          />
-                        );
-                      }
-
-                      if (state === "call" || state === "input-streaming") {
-                        return (
-                          <LoadingIndicator
-                            key={`load-${i}`}
-                            text="Searching the web..."
-                          />
-                        );
-                      }
-                      return null;
-                    }
-
-                    default:
-                      return null;
-                  }
-                })}
+                {m.parts?.map((part: any, i: number) => (
+                  <MessagePart key={i} part={part} index={i} />
+                ))}
               </div>
             </div>
           ))
