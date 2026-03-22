@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { AgentType, AIChatProps } from "./types";
+import { AgentType, AIChatProps, MessagePart } from "./types";
 import { usePersistentChat } from "./usePersistentChat";
-import { MessagePart } from "./MessageParts";
+import { MessagePartRenderer } from "./MessageParts";
 import { SpinnerIcon } from "./SpinnerIcon";
 import { AgentSwitcher } from "./AgentSwitcher";
 
@@ -150,8 +150,12 @@ export function AIChat({ projectId, onProjectsUpdate }: AIChatProps) {
               <div
                 className={`max-w-[80%] rounded-lg p-3 ${m.role === "user" ? "bg-black text-white" : "bg-gray-100 text-gray-800"}`}
               >
-                {m.parts?.map((part: any, i: number) => (
-                  <MessagePart key={i} part={part} index={i} />
+                {m.parts?.map((part, i) => (
+                  <MessagePartRenderer
+                    key={i}
+                    part={part as MessagePart}
+                    index={i}
+                  />
                 ))}
               </div>
             </div>

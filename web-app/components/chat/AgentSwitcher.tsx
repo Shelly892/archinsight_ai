@@ -1,9 +1,9 @@
 import { AgentType } from "./types";
 
 const AGENT_STYLES: Record<AgentType, { active: string; label: string }> = {
-  project: { active: "bg-blue-100 text-green-700", label: "@project" },
+  project: { active: "bg-blue-100 text-blue-700", label: "@project" },
   search: { active: "bg-green-100 text-green-700", label: "@search" },
-  case: { active: "bg-purple-100 text-green-700", label: "@case" },
+  case: { active: "bg-purple-100 text-purple-700", label: "@case" },
 };
 
 interface AgentSwitcherProps {

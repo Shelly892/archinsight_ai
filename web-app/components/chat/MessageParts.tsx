@@ -1,17 +1,17 @@
 import Link from "next/link";
 import { ResultCard } from "./ResultCard";
 import { LoadingIndicator } from "./LoadingIndicator";
-import { SearchProject, WebSearchResult } from "./types";
+import { MessagePart, SearchProjectsPart, WebSearchPart } from "./types";
 
 // ---- Text ----
-export function TextPart({ text }: { text: string }) {
+export function TextBlock({ text }: { text: string }) {
   return <div className="whitespace-pre-wrap mb-2">{text}</div>;
 }
 
 // ---- Database search result ----
-export function SearchProjectsPart({ part }: { part: any }) {
-  const projects: SearchProject[] = part.output;
-  const state: string = part.state;
+export function SearchProjectsBlock({ part }: { part: SearchProjectsPart }) {
+  const projects = part.output;
+  const state = part.state;
 
   if (projects) {
     return (
@@ -45,9 +45,9 @@ export function SearchProjectsPart({ part }: { part: any }) {
 }
 
 // ---- Web search result ----
-export function WebSearchPart({ part }: { part: any }) {
-  const results: WebSearchResult[] = part.output;
-  const state: string = part.state;
+export function WebSearchBlock({ part }: { part: WebSearchPart }) {
+  const results = part.output;
+  const state = part.state;
 
   if (results) {
     return (
@@ -81,14 +81,20 @@ export function WebSearchPart({ part }: { part: any }) {
 }
 
 // ---- Router: decides which part component to render ----
-export function MessagePart({ part, index }: { part: any; index: number }) {
+export function MessagePartRenderer({
+  part,
+  index,
+}: {
+  part: MessagePart;
+  index: number;
+}) {
   switch (part.type) {
     case "text":
-      return <TextPart key={`text-${index}`} text={part.text} />;
+      return <TextBlock key={`text-${index}`} text={part.text} />;
     case "tool-search_projects":
-      return <SearchProjectsPart key={`search-${index}`} part={part} />;
+      return <SearchProjectsBlock key={`search-${index}`} part={part} />;
     case "tool-web_search":
-      return <WebSearchPart key={`web-${index}`} part={part} />;
+      return <WebSearchBlock key={`web-${index}`} part={part} />;
     default:
       return null;
   }
