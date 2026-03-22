@@ -1,5 +1,8 @@
 "use client";
-
+import { SpinnerIcon } from "./SpinnerIcon";
+import { LoadingIndicator } from "./LoadingIndicator";
+import { ResultCard } from "./ResultCard";
+import Link from "next/link";
 import { useChat, UIMessage } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { useState, useEffect } from "react";
@@ -212,26 +215,7 @@ export function AIChat({ projectId, onProjectsUpdate }: AIChatProps) {
         {/* Render loading state if not fully mounted to prevent hydration errors */}
         {!isMounted ? (
           <div className="flex items-center justify-center h-full text-gray-400">
-            <svg
-              className="animate-spin h-5 w-5 mr-2"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              ></circle>
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
+            <SpinnerIcon className="h-5 w-5 mr-2" />
             Loading chat history...
           </div>
         ) : messages.length === 0 ? (
@@ -247,10 +231,9 @@ export function AIChat({ projectId, onProjectsUpdate }: AIChatProps) {
               <div
                 className={`max-w-[80%] rounded-lg p-3 ${m.role === "user" ? "bg-black text-white" : "bg-gray-100 text-gray-800"}`}
               >
-                {/* 🎯 修复 2：全兼容渲染逻辑 */}
                 {m.parts?.map((part: any, i: number) => {
                   switch (part.type) {
-                    // 1. 渲染纯文本
+                    // render text
                     case "text":
                       return (
                         <div
@@ -261,148 +244,88 @@ export function AIChat({ projectId, onProjectsUpdate }: AIChatProps) {
                         </div>
                       );
 
-                    // 2. 渲染 Database 项目搜索工具卡片
+                    // render Database search tool card
                     case "tool-search_projects": {
                       const projects = part.output;
                       const state = part.state;
 
                       if (projects) {
-                        if (projects.length === 0) {
-                          return (
-                            <div
-                              key={`empty-${i}`}
-                              className="text-gray-500 text-sm mt-2 italic"
-                            >
-                              No projects found.
-                            </div>
-                          );
-                        }
                         return (
-                          <div
+                          <ResultCard
                             key={`card-${i}`}
-                            className="mt-2 mb-3 p-3 bg-white border border-gray-200 rounded-md shadow-sm"
-                          >
-                            <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">
-                              🔍 Database search results ({projects.length})
-                            </p>
-                            <div className="space-y-2">
-                              {projects
-                                .slice(0, 3)
-                                .map((proj: any, idx: number) => (
-                                  <div
-                                    key={idx}
-                                    className="p-2 hover:bg-gray-50 rounded cursor-pointer transition-colors border-b last:border-0 border-gray-100"
-                                    onClick={() =>
-                                      window.open(`/project/${proj.id}`, "_blank")
-                                    }
-                                  >
-                                    <div className="font-semibold text-gray-900 text-sm">
-                                      {proj.title}
-                                    </div>
-                                    <div className="text-gray-500 text-xs mt-1">
-                                      {proj.architect} • {proj.year}
-                                    </div>
-                                  </div>
-                                ))}
-                            </div>
-                          </div>
+                            title="🔍 Database search results"
+                            items={projects}
+                            renderItem={(proj: any, idx: number) => (
+                              <Link
+                                key={idx}
+                                href={`/project/${proj.id}`}
+                                className="block p-2 hover:bg-gray-50 rounded transition-colors border-b last:border-0 border-gray-100"
+                              >
+                                <div className="font-semibold text-gray-900 text-sm">
+                                  {proj.title}
+                                </div>
+                                <div className="text-gray-500 text-xs mt-1">
+                                  {proj.architect} • {proj.year}
+                                </div>
+                              </Link>
+                            )}
+                            emptyMessage="No projects found."
+                          />
                         );
                       }
-
                       if (state === "call" || state === "input-streaming") {
                         return (
-                          <div
+                          <LoadingIndicator
                             key={`load-${i}`}
-                            className="text-gray-400 text-sm mt-2 animate-pulse flex items-center gap-2"
-                          >
-                            <svg className="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Searching in vector database...
-                          </div>
+                            text="Searching in vector database..."
+                          />
                         );
                       }
                       return null;
                     }
 
-                    // 3. 渲染 Web Search 工具卡片
+                    // render Web Search tool card
                     case "tool-web_search": {
                       const results = part.output;
                       const state = part.state;
 
                       if (results) {
-                        if (results.length === 0) {
-                          return (
-                            <div
-                              key={`empty-${i}`}
-                              className="text-gray-500 text-sm mt-2 italic"
-                            >
-                              No web search results found.
-                            </div>
-                          );
-                        }
                         return (
-                          <div
+                          <ResultCard
                             key={`card-${i}`}
-                            className="mt-2 mb-3 p-3 bg-white border border-gray-200 rounded-md shadow-sm"
-                          >
-                            <p className="text-xs font-bold text-blue-500 mb-2 uppercase tracking-wider flex items-center gap-2">
-                              <span>🌐</span> Web Search Results ({results.length})
-                            </p>
-                            <div className="space-y-3">
-                              {results.slice(0, 3).map((res: any, idx: number) => (
-                                <div
-                                  key={idx}
-                                  className="border-b last:border-0 border-gray-100 pb-2 last:pb-0"
-                                >
-                                  <a
-                                    href={res.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="font-semibold text-blue-600 hover:underline text-sm line-clamp-1"
-                                  >
-                                    {res.title}
-                                  </a>
-                                  <p className="text-gray-600 text-xs mt-1 line-clamp-2">
-                                    {res.snippet}
-                                  </p>
+                            title="🌐 Web Search Results"
+                            items={results}
+                            renderItem={(res: any, idx: number) => (
+                              <div
+                                key={idx}
+                                className="p-2 hover:bg-gray-50 rounded cursor-pointer transition-colors border-b last:border-0 border-gray-100"
+                                onClick={() => window.open(res.url, "_blank")}
+                              >
+                                <div className="font-semibold text-gray-900 text-sm">
+                                  {res.title}
                                 </div>
-                              ))}
-                            </div>
-                          </div>
+                                <div className="text-gray-500 text-xs mt-1 line-clamp-2">
+                                  {res.snippet}
+                                </div>
+                              </div>
+                            )}
+                            emptyMessage="No web search results found."
+                          />
                         );
                       }
 
                       if (state === "call" || state === "input-streaming") {
                         return (
-                          <div
+                          <LoadingIndicator
                             key={`load-${i}`}
-                            className="text-gray-400 text-sm mt-2 animate-pulse flex items-center gap-2"
-                          >
-                            <svg className="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Searching the web...
-                          </div>
+                            text="Searching the web..."
+                          />
                         );
                       }
                       return null;
                     }
 
                     default:
-                      // 为了兼容 Vercel AI SDK 中标准的 tool-invocation 格式
-                      if (part.type === "tool-invocation") {
-                        const toolName = part.toolInvocation?.toolName || part.toolName;
-                        if (toolName === "search_projects") {
-                          // TODO: 如果需要可以把上面 "tool-search_projects" 的渲染抽离成函数，在这里复用
-                          return <div key={`inv-${i}`} className="text-gray-400 text-xs italic">Tool Used: Database Search</div>;
-                        }
-                        if (toolName === "web_search") {
-                          return <div key={`inv-${i}`} className="text-gray-400 text-xs italic">Tool Used: Web Search</div>;
-                        }
-                      }
                       return null;
                   }
                 })}

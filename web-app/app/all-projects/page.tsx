@@ -1,4 +1,4 @@
-import ProjectList from "@/components/ProjectList";
+import ProjectList from "@/components/project/ProjectList";
 import { db } from "@/app/lib/db";
 
 async function getProjects() {

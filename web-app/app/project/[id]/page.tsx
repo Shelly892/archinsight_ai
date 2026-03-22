@@ -1,20 +1,23 @@
-import { AIChat } from "@/components/AIChat";
+import { AIChat } from "@/components/chat/AIChat";
 import { db } from "@/app/lib/db";
 import { notFound } from "next/navigation";
-import ProjectDetail from "@/components/ProjectDetail";
+import ProjectDetail from "@/components/project/ProjectDetail";
+import { cleanDescription } from "@/app/lib/utils";
 
 // Fetch data server-side
 async function getProject(id: string) {
   if (!id || id === "undefined" || isNaN(Number(id))) {
     return null;
   }
-  try{
+  try {
     const result = await db.query(
       "SELECT id, architect, title, year, location, area, gallery, description,url, embedding FROM projects WHERE id=$1",
       [id]
     );
     if (result.rows.length === 0) return null;
-    return result.rows[0];
+    const project = result.rows[0];
+    project.description = cleanDescription(project.description);
+    return project;
   } catch (error) {
     console.error("Error fetching project:", error);
     return null;

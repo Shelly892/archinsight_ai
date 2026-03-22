@@ -44,15 +44,6 @@ export default function ProjectDetail({ project }: { project: any }) {
             </span>
             <span className="font-medium text-gray-900">{project.year}</span>
           </div>
-          {/* <div className="w-px bg-gray-200"></div>
-          <div className="flex flex-col">
-            <span className="text-gray-400 uppercase text-xs font-bold tracking-wider">
-              Location
-            </span>
-            <span className="font-medium text-gray-900">
-              {project.location || "N/A"}
-            </span>
-          </div> */}
           <div className="w-px bg-gray-200"></div>
           <div className="flex flex-col">
             <span className="text-gray-400 uppercase text-xs font-bold tracking-wider">
@@ -77,20 +68,13 @@ export default function ProjectDetail({ project }: { project: any }) {
       </div>
 
       <div className="prose prose-gray max-w-none space-y-4">
-        {(project.description || "")
-          .replace(
-            /^\+\s*\d+\s*(?:Text description provided by the architects\.)?/gi,
-            ""
-          )
-          .replace(/Text description provided by the architects\./gi, "")
-          .split("\n")
-          .map((p: string) => p.trim())
-          .filter((p: string) => p !== "")
-          .map((paragraph: string, index: number) => (
+        {(project.description as string[]).map(
+          (paragraph: string, index: number) => (
             <p key={index} className="text-gray-700 leading-relaxed text-lg">
               {paragraph}
             </p>
-          ))}
+          )
+        )}
       </div>
 
       {project.gallery && project.gallery.length > 0 && (

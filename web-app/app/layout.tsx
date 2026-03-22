@@ -1,6 +1,11 @@
 import "./globals.css";
 import Link from "next/link";
 
+export const metadata = {
+  title: "ArchInsight AI",
+  description: "Your AI-powered architectural knowledge base",
+};
+
 export default function RootLayout({
   children,
 }: {

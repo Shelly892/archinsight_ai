@@ -1,4 +1,4 @@
-import { stepCountIs, streamText, tool } from "ai";
+import { stepCountIs, streamText, tool, convertToModelMessages } from "ai";
 import { openai } from "../openai";
 import { searchProjects } from "../rag/retrieve";
 import { generateEmbedding } from "../rag/embeddings";
@@ -15,7 +15,7 @@ export async function searchAgent(messages: any) {
     Once you receive the tool results, summarize them politely to the user.
     `,
     stopWhen: stepCountIs(5),
-    messages,
+    messages:await convertToModelMessages(messages),
     tools: {
       search_projects: tool({
         description:

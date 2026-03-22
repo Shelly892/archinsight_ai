@@ -1,4 +1,4 @@
-import ProjectDashboard from "@/components/ProjectDashboard";
+import ProjectDashboard from "@/components/project/ProjectDashboard";
 import { db } from "@/app/lib/db";
 
 async function getProjects() {

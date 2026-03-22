@@ -16,14 +16,13 @@ export async function searchProjects(embedding: number[]) {
       embedding <-> $1 AS distance
     FROM projects
     ORDER BY distance
-    LIMIT 5
+    LIMIT 6
     `,
-    // 🚨 加上 JSON.stringify，给它套上中括号！
+    // Wrap the embedding array in JSON.stringify so pgvector can parse it correctly
     [JSON.stringify(embedding)]
   );
 
-  // 🕵️ 加上这行探照灯代码，在终端里看清真面目！
-  console.log("🔍 数据库返回的首个项目:", {
+  console.log("🔍 First result from DB:", {
     id: result.rows[0]?.id,
     title: result.rows[0]?.title,
   });

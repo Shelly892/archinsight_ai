@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import ProjectList from "@/components/ProjectList";
-import { AIChat } from "@/components/AIChat";
+import ProjectList from "./ProjectList";
+import { AIChat } from "../chat/AIChat";
 
 export default function ProjectDashboard({
   initialProjects,
