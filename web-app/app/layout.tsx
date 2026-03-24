@@ -13,7 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="antialiased text-gray-900 bg-gray-50 flex flex-col min-h-screen">
+      <body className="antialiased text-gray-900 bg-gray-50 flex flex-col min-h-screen" suppressHydrationWarning>
         <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 p-4 flex justify-between items-center px-8 shadow-sm">
           <Link
             href="/"
