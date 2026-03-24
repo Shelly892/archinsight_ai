@@ -52,5 +52,9 @@ export function usePersistentChat({
     localStorage.removeItem(storageKey);
   };
 
-  return { messages, sendMessage, setMessages, isMounted, clearChat };
+  const uniqueMessages = [
+    ...new Map(messages.map((m) => [m.id, m])).values(),
+  ];
+
+  return { messages: uniqueMessages, sendMessage, setMessages, isMounted, clearChat };
 }
